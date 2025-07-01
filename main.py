@@ -35,9 +35,9 @@ knn_model = tuned_k_neighbors(X_train, y_train)
 nb_model = tuned_naive_bayes(X_train, y_train)
 
 skf = StratifiedKFold(n_splits=20, shuffle=True, random_state=42)
-scorers = {'precision': make_scorer(precision_score, pos_label=1),
-           'recall': make_scorer(recall_score, pos_label=1),
-           'f1': make_scorer(f1_score, pos_label=1)}
+scorers = {'Precision': make_scorer(precision_score, pos_label=1),
+           'Recall': make_scorer(recall_score, pos_label=1),
+           'F1': make_scorer(f1_score, pos_label=1)}
 models = {
     'Logistic Regression': logreg_model,
     'Decision Tree': tree_model,
@@ -45,22 +45,27 @@ models = {
     'Gaussian Naive Bayes': nb_model
 }
 
-for score in scorers:
-    fig, ax = plt.subplots()    
-    for name, model in models.items():
+train_sizes = np.arange(0.05, 1.0, 0.05)
+train_sizes_percent = (train_sizes * 100).astype(int)
+
+for scorer_name, scorer in scorers.items():
+    fig, ax = plt.subplots()
+    for model_name, model in models.items():
         scores = []
-        for test_size in range(0.95, 0, -0.05):
-            X_train_curve, X_test_curve, y_train_curve, y_test_curve = train_test_split(X_train, y_train, test_size=test_size, random_state=42, stratify=y_train)
+        for train_size in train_sizes:
+            X_train_curve, X_test_curve, y_train_curve, y_test_curve = train_test_split(
+                X, y, train_size=train_size, random_state=42, stratify=y
+            )
             model.fit(X_train_curve, y_train_curve)
             y_pred_curve = model.predict(X_test_curve)
-            scores.append(scorers[score](y_test_curve, y_pred_curve))
+            scores.append(scorer._score_func(y_test_curve, y_pred_curve, pos_label=1))
+        ax.plot(train_sizes_percent, scores, marker='o', label=model_name)
 
-    ax.plot(X.shape[0] 
     ax.set_xlabel("Training Set Size (%)")
-    ax.set_ylabel(f"{score.capitalize()} Score")
-    ax.set_title(f"Learning Curve Comparison ({score.capitalize()})")
+    ax.set_ylabel(f"{scorer_name} Score")
+    ax.set_title(f"Learning Curve Comparison ({scorer_name})")
     ax.legend(loc="best")
-    ax.set_xticks(np.arange(5, 101, 5))
+    ax.set_xticks(np.arange(5, 100, 5))
     ax.grid(True)
     plt.tight_layout()
     plt.show()
