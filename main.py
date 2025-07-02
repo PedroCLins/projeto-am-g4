@@ -2,8 +2,8 @@ from models.logisticRegression import tuned_logistic_regression
 from models.decisionTree import tuned_decision_tree
 from models.kNeighbours import tuned_k_neighbors
 from models.naiveBayes import tuned_naive_bayes
-from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split, StratifiedKFold, learning_curve
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.metrics import precision_score, recall_score, f1_score, make_scorer
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -20,19 +20,21 @@ wdbc_db.columns = [
     "radius3", "texture3", "perimeter3", "area3", "smoothness3", "compactness3", "concavity3", "concave_points3", "symmetry3", "fractal_dimension3"
 ]
 
-# Split the dataset into features and target variable
 label_encoder = LabelEncoder()
-X = wdbc_db.iloc[:, 1:].values
+std_scaler = StandardScaler()
+X = std_scaler.fit_transform(wdbc_db.iloc[:, 1:].values)  # Standardize the features
 y = label_encoder.fit_transform(wdbc_db["diagnosis"])  # Encode 'M' as 1 and 'B' as 0
+
+print(wdbc_db.head())  # Display the first few rows of the dataset
 
 # Split the dataset into training and testing sets into 70% training and 30% testing
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
 
 # Defining the Classifiers with Hyperparameter Tuning, Cross-Validator and Metrics
-logreg_model = tuned_logistic_regression(X_train, y_train)
-tree_model = tuned_decision_tree(X_train, y_train)
-knn_model = tuned_k_neighbors(X_train, y_train)
-nb_model = tuned_naive_bayes(X_train, y_train)
+logreg_model, logreg_params = tuned_logistic_regression(X_train, y_train)
+tree_model, tree_params = tuned_decision_tree(X_train, y_train)
+knn_model, knn_params = tuned_k_neighbors(X_train, y_train)
+nb_model, nb_params = tuned_naive_bayes(X_train, y_train)
 
 skf = StratifiedKFold(n_splits=20, shuffle=True, random_state=42)
 scorers = {'Precision': make_scorer(precision_score, pos_label=1),
@@ -69,3 +71,13 @@ for scorer_name, scorer in scorers.items():
     ax.grid(True)
     plt.tight_layout()
     plt.show()
+
+# print("Logistic Regression Best Params:", logreg_params)
+# print("Decision Tree Best Params:", tree_params)
+# print("K-Nearest Neighbors Best Params:", knn_params)
+# print("Gaussian Naive Bayes Best Params:", nb_params)
+
+print("Logistic Regression Best Params:", (logreg_params['precision']+logreg_params['recall_score']+logreg_params['f1_score'])/3)
+print("Decision Tree Best Params:", (tree_params['precision']+tree_params['recall_score']+tree_params['f1_score'])/3)
+print("K-Nearest Neighbors Best Params:", (knn_params['precision']+knn_params['recall_score']+knn_params['f1_score'])/3)
+print("Gaussian Naive Bayes Best Params:", (nb_params['precision']+nb_params['recall_score']+nb_params['f1_score'])/3)

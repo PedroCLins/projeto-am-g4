@@ -35,7 +35,13 @@ def tuned_naive_bayes(X_train: np.ndarray, y_train: pd.Series) -> GaussianNB:
         })
 
     # Best Hyperparameters Combination by Each Metric on Average
+    print("Best Hyperparameters Combinations by Each Metric:")
+    for metric in ['precision', 'recall_score', 'f1_score']:
+        best_params = max(metrics_scores, key=lambda x: x[metric])
+        print(f"{metric.capitalize()}: {best_params['params']} with score {best_params[metric]:.4f}")
+
+    # Best Hyperparameters Combination Overall
     best_overall_params = max(metrics_scores, key=lambda x: (x['precision'] + x['f1_score'] + x['recall_score']) / 3)
     best_model = GaussianNB(var_smoothing=best_overall_params['params'][0])
 
-    return best_model
+    return best_model, best_overall_params
