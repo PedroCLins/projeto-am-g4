@@ -11,3 +11,5 @@ Run `pip install -U scikit-learn` inside the venv.
 
 And `pip install pandas`
 
+And `pip install matplotlib`
+
